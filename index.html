@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- 💼 Identificação e Propriedade -->
+  <meta name="author" content="Raphael Morais">
+  <meta name="copyright" content="© 2025 Raphael Morais Da Silva. Todos os direitos reservados.">
+  <meta name="creator" content="Raphael Morais">
+  <meta name="publisher" content="Raphael Morais">
+
+  <!-- 🧠 SEO opcional -->
+  <meta name="description" content="Sistema de fechamento de profissionais - cálculo automático de impostos e valor líquido.">
+  <meta name="keywords" content="fechamento profissional, cálculo de impostos, PIS, CSLL, COFINS, IRRF, sistema financeiro">
+  <meta name="robots" content="noindex, nofollow"> 
+
+  <title>Fechamento de Profissional </title>
+  <style>
+     body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0d1b2a, #1b263b);
+      color: #e0e1dd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      color: #00b4d8;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #00b4d8;
+      color: #fff;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0096c7;
+      transform: scale(1.05);
+    }
+
+    .resultado {
+      margin-top: 20px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #adb5bd;
+    }
+
+    footer span {
+      color: #00b4d8;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fechamento de Profissional</h1>
+  <div class="container">
+    <label for="valor">Valor total dos serviços (R$):</label>
+    <input type="number" id="valor" placeholder="Ex: 1500" step="0.01" min="0">
+
+    <button onclick="calcular()">Calcular Descontos</button>
+
+    <div class="resultado" id="resultado" style="display: none;">
+      <p id="faixa"></p>
+      <p id="pis"></p>
+      <p id="csll"></p>
+      <p id="irrf"></p>
+      <p id="cofins"></p>
+      <hr>
+      <p class="valor-final">Valor líquido a pagar: <span id="liquido"></span></p>
+    </div>
+    <p class="info">As faixas de imposto são aplicadas automaticamente conforme o valor informado.</p>
+  </div>
+
+  <script>
+    function calcular() {
+      const valorTotal = parseFloat(document.getElementById('valor').value);
+      const resDiv = document.getElementById('resultado');
+      const faixaTxt = document.getElementById('faixa');
+      const pisTxt = document.getElementById('pis');
+      const csllTxt = document.getElementById('csll');
+      const irrfTxt = document.getElementById('irrf');
+      const cofinsTxt = document.getElementById('cofins');
+      const liquidoTxt = document.getElementById('liquido');
+
+      // Limpa campos
+      pisTxt.innerText = csllTxt.innerText = irrfTxt.innerText = cofinsTxt.innerText = '';
+
+      if (isNaN(valorTotal) || valorTotal <= 0) {
+        alert("Por favor, insira um valor válido!");
+        return;
+      }
+
+      let pis = 0, csll = 0, irrf = 0, cofins = 0;
+      let faixa = "";
+
+      // Aplica regras conforme faixa
+      if (valorTotal <= 666.67) {
+        faixa = "Faixa até R$ 666,67 → PIS, CSLL e COFINS aplicados.";
+        pis = valorTotal * 0.0065;
+        csll = valorTotal * 0.01;
+        cofins = valorTotal * 0.03;
+      } else {
+        faixa = "Faixa acima de R$ 666,67 → PIS, CSLL, IRRF e COFINS aplicados.";
+        pis = valorTotal * 0.0065;
+        csll = valorTotal * 0.01;
+        irrf = valorTotal * 0.015;
+        cofins = valorTotal * 0.03;
+      }
+
+      const totalDescontos = pis + csll + irrf + cofins;
+      const valorLiquido = valorTotal - totalDescontos;
+
+      // Exibe resultados formatados
+      faixaTxt.innerText = faixa;
+      pisTxt.innerText = "PIS (0,65%): " + pis.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      csllTxt.innerText = "CSLL (1,0%): " + csll.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      cofinsTxt.innerText = "COFINS (3,0%): " + cofins.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (irrf > 0) irrfTxt.innerText = "IRRF (1,5%): " + irrf.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      liquidoTxt.innerText = valorLiquido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      resDiv.style.display = "block";
+    }
+  </script>
+</body>
+</html>
