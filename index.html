@@ -13,15 +13,15 @@
   <style>
     :root {
       --primary: #00b4d8;
-      --primary-dark: #0095c7ab;
+      --primary-dark: #13b9cf;
       --secondary: #312f2f;
-      --dark: #924848;
-      --light: #000000;
+      --dark: #ffffff;
+      --light: #000000cc;
       --gray: #000000d2;
       --success: #2ecc71;
       --danger: #e74c3c;
       --employee: #9b59b6;
-      --card-bg: #ffffff;
+      --card-bg: #ffffffd8;
       --input-bg: #ffffff;
     }
 
@@ -64,7 +64,7 @@
 
     .login-logo {
       font-size: 2.5rem;
-      color: var(--primary-dark);
+      color: var(--primarydark);
       margin-bottom: 10px;
     }
 
@@ -146,6 +146,17 @@
 
     input:focus, select:focus {
       border-color: var(--gray);
+    }
+
+    /* Checkbox personalizado */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 5px;
     }
 
     /* Botões */
@@ -331,7 +342,7 @@
       border-top: 1px solid rgba(0, 0, 0, 0.1);
     }
 
-    /* Estilos do recibo (mantidos iguais ao original) */
+    /* Estilos do recibo */
     .recibo-preview{
       background: white;
       color: black;
@@ -383,16 +394,22 @@
       font-weight: 700;
     }
     table.recibo-tabela col.qtd{ width: 10%; }
-    table.recibo-tabela col.item{ width: 55%; }
-    table.recibo-tabela col.valor{ width: 15%; }
-    table.recibo-tabela col.valorPago{ width: 20%; }
+    table.recibo-tabela col.item{ width: 45%; }
+    table.recibo-tabela col.valor{ width: 20%; }
+    table.recibo-tabela col.valorPago{ width: 25%; }
     .col-qtd{ text-align: center; }
     .col-valor, .col-valorpago{ text-align: right; }
     .valor-pago-destaque{ font-weight: 700; }
-    .pago-a{
-      font-size: 10pt;
-      line-height: 1.5;
+    .assinatura-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12mm;
     }
+    .data-pagamento { font-size: 10pt; }
+    .linha-assinatura { text-align: center; width: 50%; }
+    .linha-assinatura div { border-top: 1px solid #000; width: 80%; margin: 0 auto; }
+    
     @media print{
       @page{
         size: A4 portrait;
@@ -443,7 +460,7 @@
     <div class="login-card">
       <div class="login-header">
         <div class="login-logo">
-          <i class="fas fa-calculator"></i>
+          <i class="fa-solid fa-gem"></i>
         </div>
         <h1>Sistema de Fechamento</h1>
         <p style="color: var(--gray);">Acesso ao sistema</p>
@@ -471,7 +488,7 @@
   <div id="mainSystem">
     <header>
       <div class="logo">
-        <i class="fas fa-calculator"></i>
+        <i class="fa-solid fa-gem"></i>
       </div>
       <h1>Sistema de Fechamento</h1>
       <p class="subtitle" id="userGreeting"></p>
@@ -491,7 +508,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Nome Completo *</label>
-          <input type="text" id="profNome" placeholder= readonly>
+          <input type="text" id="profNome" placeholder="" readonly>
         </div>
         
         <div class="form-group">
@@ -505,7 +522,7 @@
           <label>Tipo * (selecione)</label>
           <select id="profRegime">
             <option value="">Selecione...</option>
-            <option value="funcionario">Funcionário</option>
+            <option value="funcionario">Sem Descontos</option>
             <option value="pj-presumido">PJ - Lucro Presumido</option>
           </select>
         </div>
@@ -558,7 +575,7 @@
         
         <div class="form-group">
           <label>Pagamento</label>
-          <select id="formaPagamento">
+          <select id="formaPagamento" onchange="togglePagoCheckbox()">
             <option value="pix">PIX</option>
             <option value="dinheiro">Dinheiro</option>
             <option value="transferencia">Transferência</option>
@@ -629,7 +646,12 @@
           <span id="liquido">R$ 0,00</span>
         </div>
         
-        <div class="buttons">
+        <!-- Checkbox "Pago hoje?" ao lado do botão Gerar Recibo -->
+        <div style="display: flex; align-items: center; gap: 20px; margin-top: 20px;">
+          <div id="pagoHojeContainer" style="display: none;" class="checkbox-group">
+            <input type="checkbox" id="pagoHojeCheckbox">
+            <label for="pagoHojeCheckbox" style="margin: 0;">Pago hoje?</label>
+          </div>
           <button class="btn-success" onclick="gerarRecibo()">
             <i class="fas fa-receipt"></i> Gerar Recibo
           </button>
@@ -719,6 +741,18 @@
     let itens = [];
     let dadosCalculo = null;
     let usuario = null;
+
+    // ==================== FUNÇÕES DE FORMATAÇÃO MONETÁRIA ====================
+    function parseValorMonetario(valorString) {
+      if (!valorString) return 0;
+      // Remove pontos de milhar e substitui vírgula decimal por ponto
+      let numero = valorString.replace(/\./g, '').replace(',', '.');
+      return parseFloat(numero) || 0;
+    }
+
+    function formatarMoeda(valor) {
+      return valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
 
     // ==================== FUNÇÕES DE LOGIN ====================
     function login() {
@@ -829,7 +863,8 @@
       let options = '<option value="">Selecione...</option>';
       
       profissionais.forEach(p => {
-        const tipo = p.regime === 'funcionario' ? 'Funcionário' : 'PJ';
+        // Altera a exibição do tipo para "Sem Descontos" em vez de "Funcionário"
+        const tipo = p.regime === 'funcionario' ? 'Sem Descontos' : 'PJ';
         html += `<tr>
           <td>${p.nome}</td>
           <td><span class="badge ${p.regime}">${tipo}</span></td>
@@ -874,6 +909,14 @@
       renderizarItens();
     }
 
+    // Função auxiliar para tratar o input de valor unitário com máscara
+    function atualizarItemValorUnitario(input, id) {
+      let valor = parseValorMonetario(input.value);
+      atualizarItem(id, 'valorUnitario', valor);
+      // Atualiza o campo com o valor formatado
+      input.value = formatarMoeda(valor);
+    }
+
     function renderizarItens() {
       const container = document.getElementById('itensContainer');
       let html = '';
@@ -885,15 +928,25 @@
           <div class="item-row">
             <input type="number" value="${i.qtd}" min="1" onchange="atualizarItem(${i.id}, 'qtd', this.value)">
             <input type="text" value="${i.descricao}" placeholder="Descrição" onchange="atualizarItem(${i.id}, 'descricao', this.value)">
-            <input type="number" value="${i.valorUnitario}" step="0.01" min="0" onchange="atualizarItem(${i.id}, 'valorUnitario', this.value)">
-            <div>R$ ${i.valorTotal.toFixed(2)}</div>
+            <input type="text" value="${formatarMoeda(i.valorUnitario)}" 
+                   onblur="atualizarItemValorUnitario(this, ${i.id})"
+                   placeholder="0,00">
+            <div>R$ ${formatarMoeda(i.valorTotal)}</div>
             <div><button class="btn-danger btn-small" onclick="removerItem(${i.id})"><i class="fas fa-trash"></i></button></div>
           </div>
         `;
       });
       
       container.innerHTML = html;
-      document.getElementById('totalItens').innerHTML = `Subtotal: R$ ${total.toFixed(2)}`;
+      document.getElementById('totalItens').innerHTML = `Subtotal: R$ ${formatarMoeda(total)}`;
+    }
+
+    // ==================== FUNÇÕES DO CHECKBOX PAGO HOJE ====================
+    function togglePagoCheckbox() {
+      const forma = document.getElementById('formaPagamento').value;
+      const container = document.getElementById('pagoHojeContainer');
+      // O checkbox só deve ser mostrado se a forma for dinheiro E o resultado estiver visível
+      // Mas vamos controlar também no calcular
     }
 
     // ==================== FUNÇÕES DE CÁLCULO ====================
@@ -935,9 +988,20 @@
       const liquido = subtotal - totalDescontos;
       const data = new Date().toLocaleString('pt-BR');
       
+      // Exibe ou esconde o checkbox "Pago hoje?" baseado na forma de pagamento
+      const forma = document.getElementById('formaPagamento').value;
+      const pagoHojeContainer = document.getElementById('pagoHojeContainer');
+      if (forma === 'dinheiro') {
+        pagoHojeContainer.style.display = 'flex';
+      } else {
+        pagoHojeContainer.style.display = 'none';
+        // Desmarca o checkbox ao esconder
+        document.getElementById('pagoHojeCheckbox').checked = false;
+      }
+      
       dadosCalculo = {
         profissional,
-        formaPagamento: document.getElementById('formaPagamento').value,
+        formaPagamento: forma,
         itens: [...itens],
         subtotal,
         pis, csll, irrf, cofins,
@@ -948,14 +1012,15 @@
       
       document.getElementById('infoNome').textContent = profissional.nome;
       document.getElementById('infoCpf').textContent = profissional.documento;
-      document.getElementById('infoTipo').textContent = profissional.regime === 'funcionario' ? 'Funcionário' : 'PJ';
+      // Exibe "Sem Descontos" no lugar de "Funcionário"
+      document.getElementById('infoTipo').textContent = profissional.regime === 'funcionario' ? 'Sem Descontos' : 'PJ';
       document.getElementById('infoData').textContent = data;
-      document.getElementById('valorSubtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
-      document.getElementById('pis').textContent = `R$ ${pis.toFixed(2)}`;
-      document.getElementById('csll').textContent = `R$ ${csll.toFixed(2)}`;
-      document.getElementById('cofins').textContent = `R$ ${cofins.toFixed(2)}`;
-      document.getElementById('irrf').textContent = `R$ ${irrf.toFixed(2)}`;
-      document.getElementById('liquido').textContent = `R$ ${liquido.toFixed(2)}`;
+      document.getElementById('valorSubtotal').textContent = `R$ ${formatarMoeda(subtotal)}`;
+      document.getElementById('pis').textContent = `R$ ${formatarMoeda(pis)}`;
+      document.getElementById('csll').textContent = `R$ ${formatarMoeda(csll)}`;
+      document.getElementById('cofins').textContent = `R$ ${formatarMoeda(cofins)}`;
+      document.getElementById('irrf').textContent = `R$ ${formatarMoeda(irrf)}`;
+      document.getElementById('liquido').textContent = `R$ ${formatarMoeda(liquido)}`;
       
       document.getElementById('resultado').style.display = 'block';
       document.getElementById('semResultado').style.display = 'none';
@@ -967,38 +1032,79 @@
       document.getElementById('resultado').style.display = 'none';
       document.getElementById('semResultado').style.display = 'block';
       dadosCalculo = null;
+      // Esconde o checkbox ao limpar
+      document.getElementById('pagoHojeContainer').style.display = 'none';
     }
 
-    // ==================== FUNÇÃO DO RECIBO (igual ao original) ====================
+    // ==================== FUNÇÃO DO RECIBO (COM VALORES LÍQUIDOS POR ITEM E DATA NO CANTO ESQUERDO) ====================
     function gerarRecibo() {
       if (!dadosCalculo) {
         alert('Calcule primeiro');
         return;
       }
-      
+
       const d = dadosCalculo;
       const formaPagamentoTexto = {
         pix: 'PIX',
         dinheiro: 'Dinheiro',
         transferencia: 'Transferência Bancária'
       }[d.formaPagamento] || d.formaPagamento;
-      
+
       const dataObj = new Date();
-      const dataFormatada = dataObj.toLocaleDateString('pt-BR') + ' ' + 
-                            dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-      
+      const dataFormatada = dataObj.toLocaleDateString('pt-BR') + ' ' +
+                            dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      // Determina a alíquota de descontos (apenas para PJ)
+      let aliquotaDesconto = 0;
+      if (d.profissional.regime === 'pj-presumido' && d.subtotal > 0) {
+        aliquotaDesconto = d.totalDescontos / d.subtotal;
+      }
+
       let linhasTabela = '';
+
       d.itens.forEach(item => {
+        const valorBruto = item.valorTotal;
+        // Calcula o valor líquido proporcional ao item
+        let valorLiquido = valorBruto * (1 - aliquotaDesconto);
+
         linhasTabela += `
           <tr>
             <td class="col-qtd">${item.qtd}</td>
             <td>${item.descricao || '—'}</td>
-            <td class="col-valor">R$ ${item.valorUnitario.toFixed(2)}</td>
-            <td class="col-valorpago valor-pago-destaque">R$ ${item.valorTotal.toFixed(2)}</td>
+            <td class="col-valor">R$ ${formatarMoeda(valorBruto)}</td>
+            <td class="col-valorpago valor-pago-destaque">R$ ${formatarMoeda(valorLiquido)}</td>
           </tr>
         `;
       });
-      
+
+      // Linha de total líquido (alinhada à coluna Valor Líquido)
+      linhasTabela += `
+  <tr>
+    <td colspan="3"></td>
+    <td class="col-valorpago valor-pago-destaque" style="text-align: right;">
+      TOTAL: R$ ${formatarMoeda(d.liquido)}
+    </td>
+  </tr>
+`;
+
+      // Define a data de pagamento: se o checkbox estiver marcado, usa a data atual; caso contrário, deixa espaço
+      const pagoHoje = document.getElementById('pagoHojeCheckbox').checked;
+if (pagoHoje) {
+  linhasTabela += `
+    <tr>
+      <td colspan="3"></td>
+      <td class="col-valorpago valor-pago-destaque" style="text-align: right;">
+        TOTAL PAGO: R$ ${formatarMoeda(d.liquido)}
+      </td>
+    </tr>
+  `;
+}
+      const hoje = new Date();
+      const dia = hoje.getDate().toString().padStart(2, '0');
+      const mes = (hoje.getMonth()+1).toString().padStart(2, '0');
+      const ano = hoje.getFullYear();
+      const dataPagamento = pagoHoje ? `${dia}/${mes}/${ano}` : '____/____/____';
+
       const reciboHTML = `
         <!DOCTYPE html>
         <html>
@@ -1026,23 +1132,31 @@
             th, td { border: 1px solid #000; padding: 3mm; vertical-align: middle; }
             th { text-align: center; font-weight: 700; }
             col.qtd { width: 10%; }
-            col.item { width: 55%; }
-            col.valor { width: 15%; }
-            col.valorPago { width: 20%; }
+            col.item { width: 45%; }
+            col.valor { width: 20%; }
+            col.valorPago { width: 25%; }
             .col-qtd { text-align: center; }
             .col-valor, .col-valorpago { text-align: right; }
             .valor-pago-destaque { font-weight: 700; }
-            .pago-a { font-size: 10pt; line-height: 1.5; }
+            .assinatura-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 12mm;
+            }
+            .data-pagamento { font-size: 10pt; }
+            .linha-assinatura { text-align: center; width: 50%; }
+            .linha-assinatura div { border-top: 1px solid #000; width: 80%; margin: 0 auto; }
           </style>
         </head>
         <body>
           <div class="recibo">
-            <h1 class="titulo">Recibo de Pagamento</h1>
+            <h1 class="titulo">Repasse Consolidado</h1>
             <hr class="linha" />
 
             <div class="grid2">
               <div>
-                <div class="label-negrito">Amor Saúde Pirituba</div>
+                <div class="label-negrito">Amor Saúde SP Pirituba</div>
                 <div>Endereço: Avenida Doutor Felipe Pinel</div>
                 <div>Bairro: Pirituba / Cidade/Estado: São Paulo/SP</div>
                 <div>Data/Hora: ${dataFormatada} - Pagamento: ${formaPagamentoTexto}</div>
@@ -1054,7 +1168,7 @@
 
             <div class="spacer-6"></div>
 
-            <div class="pago-a">
+            <div class="Referente">
               Pago a: <span class="label-negrito">${d.profissional.nome}</span> /
               CPF/CNPJ: <span class="label-negrito">${d.profissional.documento}</span>
             </div>
@@ -1072,8 +1186,8 @@
                 <tr>
                   <th>Qtd</th>
                   <th>Item</th>
-                  <th>Valor Unit.</th>
-                  <th>Valor Pago</th>
+                  <th>Valor Bruto</th>
+                  <th>Valor Líquido</th>
                 </tr>
               </thead>
               <tbody>
@@ -1082,26 +1196,27 @@
             </table>
 
             ${d.profissional.regime === 'pj-presumido' ? `
-            <div style="margin-top: 8mm; font-size: 10pt;">
-              <p><strong>Retenções (PJ Presumido):</strong></p>
-              <p>PIS: R$ ${d.pis.toFixed(2)} | CSLL: R$ ${d.csll.toFixed(2)} | COFINS: R$ ${d.cofins.toFixed(2)} ${d.irrf > 0 ? `| IRRF: R$ ${d.irrf.toFixed(2)}` : ''}</p>
-              <p><strong>Total Líquido: R$ ${d.liquido.toFixed(2)}</strong></p>
+            <div style="margin-top: 6mm; font-size: 8pt;">
+              <p><strong>Impostos:</strong></p>
+              <p>PIS: R$ ${formatarMoeda(d.pis)} | CSLL: R$ ${formatarMoeda(d.csll)} | COFINS: R$ ${formatarMoeda(d.cofins)} ${d.irrf > 0 ? `| IRRF: R$ ${formatarMoeda(d.irrf)}` : ''}</p>
             </div>
-            ` : `
-            <div style="margin-top: 8mm; font-size: 10pt;">
-              <p><strong>Total Líquido: R$ ${d.liquido.toFixed(2)}</strong></p>
-            </div>
-            `}
+            ` : ''}
 
-            <div style="margin-top: 12mm; text-align: center;">
-              <div style="border-top: 1px solid #000; width: 50%; margin: 0 auto;"></div>
-              <p style="font-size: 10pt;">Assinatura do Responsável</p>
+            <!-- Rodapé com data de pagamento no canto esquerdo e assinatura no canto direito -->
+            <div class="assinatura-container">
+              <div class="data-pagamento">
+                <strong>DATA DE PAGAMENTO:</strong> ${dataPagamento}
+              </div>
+              <div class="linha-assinatura">
+                <div></div>
+                <p style="font-size: 10pt; margin-top: 2mm;">Assinatura</p>
+              </div>
             </div>
           </div>
         </body>
         </html>
       `;
-      
+
       const w = window.open('', '_blank');
       w.document.write(reciboHTML);
       w.document.close();
@@ -1113,5 +1228,4 @@
     });
   </script>
 </body>
-
 </html>
