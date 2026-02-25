@@ -65,7 +65,6 @@ function togglePagoCheckbox() {
 }
 
 // ==================== FUNÇÕES DE CÁLCULO ====================
-// ==================== FUNÇÕES DE CÁLCULO ====================
 function calcular() {
   const idProfissional = parseInt(document.getElementById('selectProfissional').value);
   const profissional = profissionais.find(p => p.id === idProfissional);
@@ -95,7 +94,7 @@ function calcular() {
       document.getElementById('irrfItem').style.display = 'none';
     } 
     else if (subtotal > 215.05 && subtotal <= TAXAS.LIMITE_IRRF) {
-      // ENTRE 215,05 E 666,67: APENAS PIS, COFINS E CSLL
+      // ENTRE 215,06 E 666,67: APENAS PIS, COFINS E CSLL
       pis = subtotal * TAXAS.PIS;
       csll = subtotal * TAXAS.CSLL;
       cofins = subtotal * TAXAS.COFINS;
@@ -156,3 +155,12 @@ function limparCalculo() {
   dadosCalculo = null;
   document.getElementById('pagoHojeContainer').style.display = 'none';
 }
+
+// Exportar funções globais
+window.adicionarItem = adicionarItem;
+window.removerItem = removerItem;
+window.atualizarItem = atualizarItem;
+window.atualizarItemValorUnitario = atualizarItemValorUnitario;
+window.togglePagoCheckbox = togglePagoCheckbox;
+window.calcular = calcular;
+window.limparCalculo = limparCalculo;
