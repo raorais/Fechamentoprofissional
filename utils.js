@@ -88,3 +88,12 @@ function debounce(func, delay) {
     timer = setTimeout(() => func.apply(this, args), delay);
   };
 }
+
+// Exportar funções que podem ser usadas globalmente (se necessário)
+window.formatarMoeda = formatarMoeda;
+window.parseValorMonetario = parseValorMonetario;
+window.mascaraMoeda = mascaraMoeda;
+window.validarCPF = validarCPF;
+window.showToast = showToast;
+window.confirmar = confirmar;
+window.debounce = debounce;
