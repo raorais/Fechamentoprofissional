@@ -230,3 +230,12 @@ function importarDados() {
   };
   input.click();
 }
+
+// Exportar funções globais
+window.filtrarProfissionaisBase = filtrarProfissionaisBase;
+window.selecionarProfissionalBase = selecionarProfissionalBase;
+window.salvarCadastro = salvarCadastro;
+window.preencherEdicao = preencherEdicao;
+window.excluir = excluir;
+window.exportarDados = exportarDados;
+window.importarDados = importarDados;
