@@ -1,7 +1,11 @@
 function login() {
   const user = document.getElementById('loginUsername').value;
   if (!user) {
-    showToast('Selecione um usuário', 'error');
+    if (typeof showToast === 'function') {
+      showToast('Selecione um usuário', 'error');
+    } else {
+      alert('Selecione um usuário');
+    }
     return;
   }
   usuario = user;
@@ -15,3 +19,6 @@ function login() {
     adicionarItem();
   }
 }
+
+// Exportar globalmente
+window.login = login;
