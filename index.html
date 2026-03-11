@@ -63,18 +63,18 @@
     }
 
     .login-logo,
-.logo {
-  margin-bottom: 10px;
-  text-align: center;
-}
+    .logo {
+      margin-bottom: 10px;
+      text-align: center;
+    }
 
-.login-logo img,
-.logo img {
-  max-width: 110px;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-}
+    .login-logo img,
+    .logo img {
+      max-width: 110px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
 
     .login-header h1,
     header h1 {
@@ -580,8 +580,8 @@
     <div class="login-card">
       <div class="login-header">
         <div class="login-logo">
-  <img src="mascote.png.webp" alt="Logo do sistema">
-</div>
+          <img src="logo.png" alt="Logo do sistema">
+        </div>
         <h1>Sistema de Fechamento</h1>
         <p style="color: var(--gray);">Acesso ao sistema</p>
       </div>
@@ -611,8 +611,9 @@
   <div id="mainSystem">
     <header>
       <div class="logo">
+        <img src="mascote.png.webp" alt="Logo do sistema">
       </div>
-      <h1></h1>
+      <h1>Fechamento</h1>
       <p class="subtitle" id="userGreeting"></p>
       <div class="theme-toggle no-print">
         <button id="themeToggle" class="btn-small"><i class="fas fa-moon"></i> Tema Escuro</button>
@@ -631,14 +632,14 @@
         <div class="step-number">2</div>
         <div>
           <div class="step-title">Cálculo</div>
-          <div class="step-subtitle">Adicione os itens e calcule</div>
+          <div class="step-subtitle"></div>
         </div>
       </div>
       <div id="step3" class="step">
         <div class="step-number">3</div>
         <div>
           <div class="step-title">Resultado</div>
-          <div class="step-subtitle">Confira e gere o recibo</div>
+          <div class="step-subtitle"></div>
         </div>
       </div>
     </div>
@@ -647,7 +648,7 @@
       <h2><i class="fas fa-user-plus"></i> Selecionar Profissional</h2>
 
       <div class="form-group">
-        <label>Buscar profissional (digite o nome)</label>
+        <label>Buscar</label>
         <input type="text" id="buscaProfissional" placeholder="Digite para buscar...">
         <div id="resultadosBusca" class="search-results hidden"></div>
       </div>
@@ -1030,11 +1031,7 @@
       });
 
       document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
-      document.getElementById(
-        currentStep === 1 ? 'screenProfissional' :
-        currentStep === 2 ? 'screenCalculo' :
-        'screenResultado'
-      ).classList.add('active');
+      document.getElementById(currentStep === 1 ? 'screenProfissional' : currentStep === 2 ? 'screenCalculo' : 'screenResultado').classList.add('active');
     }
 
     function irParaCalculo() {
@@ -1094,13 +1091,10 @@
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('mainSystem').style.display = 'block';
       atualizarListas();
-
       if (itens.length === 0) adicionarItem();
-
       currentStep = 1;
       atualizarEtapas();
     }
-    window.login = login;
 
     const buscarProfissionaisDebounced = debounce(function () {
       const termo = document.getElementById('buscaProfissional').value.toLowerCase().trim();
@@ -1600,7 +1594,7 @@
             }
 
             .logo {
-              width: 160px;
+              width: 80px;
             }
 
             .logo img {
@@ -1711,13 +1705,15 @@
 
             .rodape-assinatura {
               display: flex;
-              justify-content: center;
+              justify-content: space-between;
               margin-bottom: 8mm;
+              gap: 30mm;
             }
 
             .assin {
               text-align: center;
-              width: 90mm;
+              width: 80mm;
+              flex: 1;
             }
 
             .assin .linha {
@@ -1763,7 +1759,7 @@
                 <img src="letrasamors.png" alt="Logo" onerror="this.style.display='none'">
               </div>
               <div class="titulo-container">
-                <div class="titulo">RECIBO AGENDA CONSOLIDADA</div>
+                <div class="titulo">Repasse Consolidado</div>
               </div>
               <div class="espaco-direita"></div>
             </div>
@@ -1773,7 +1769,7 @@
             <div class="topo">
               <div class="esq">
                 <div class="clinica">Amor Saúde SP Pirituba</div>
-                <div>Endereço: Avenida Doutor Felipe Pinel, n° 367</div>
+                <div>Endereço: Avenida Doutor Felipe Pinel</div>
                 <div>Bairro: Pirituba / Cidade/Estado: São Paulo/SP</div>
                 <div>Data/Hora: ${escapeHtml(dataHoraFormatada)} - Pagamento: ${escapeHtml(formaPagamentoTexto)}</div>
               </div>
@@ -1808,6 +1804,13 @@
 
             <div class="rodape">
               <div class="rodape-assinatura">
+                ${dados.formaPagamento === 'dinheiro' ? `
+                <div class="assin">
+                  <div class="linha"></div>
+                  <div class="label">Assinatura do Responsável</div>
+                </div>
+                ` : ''}
+
                 <div class="assin">
                   <div class="linha"></div>
                   <div class="label">Carimbo e Assinatura</div>
@@ -1893,6 +1896,7 @@
     window.irParaCalculo = irParaCalculo;
     window.voltarParaProfissional = voltarParaProfissional;
     window.voltarParaCalculo = voltarParaCalculo;
+    window.login = login;
   </script>
 </body>
 </html>
